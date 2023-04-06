@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Voting System</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f2f2f2;
+        }
+        h1, h2, ul, form {
+          margin: 0;
+          padding: 0;
+        }
+        h1 {
+          font-size: 36px;
+          font-weight: bold;
+          text-align: center;
+          margin-top: 20px;
+        }
+        h2 {
+          font-size: 24px;
+          font-weight: bold;
+          margin-top: 20px;
+        }
+        ul {
+          list-style: none;
+          margin-top: 10px;
+        }
+        li {
+          margin-bottom: 5px;
+          padding: 5px;
+          background-color: #ffffff;
+          border: 1px solid #dddddd;
+        }
+        form {
+          margin-top: 20px;
+        }
+        label {
+          display: block;
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+        select {
+          margin-bottom: 10px;
+        }
+        button {
+          display: block;
+          margin-top: 10px;
+        }
+      </style>
+  </head>
+  <body>
+    <h1>Voting System</h1>
+    <h2>Candidates:</h2>
+    <ul id="candidates"></ul>
+    <h2>Cast Your Vote:</h2>
+    <form>
+      <label for="candidateIndex">Choose a candidate:</label>
+      <select id="candidateIndex" name="candidateIndex">
+      </select>
+      <button type="submit">Submit</button>
+    </form>
+    <h2>Results:</h2>
+    <ul id="results"></ul>
+
+    <script>
+      const candidatesList = document.getElementById("candidates");
+      const resultsList = document.getElementById("results");
+      const candidateSelect = document.getElementById("candidateIndex");
+
+      // Fetch candidates from API and display them in a list
+      fetch("/candidates")
+        .then(response => response.json())
+        .then(data => {
+          data.forEach(candidate => {
+            const li = document.createElement("li");
+            li.appendChild(document.createTextNode(candidate));
+            candidatesList.appendChild(li);
+
+            // Add the candidate as an option in the select box
+            const option = document.createElement("option");
+            option.value = candidate;
+            option.text = candidate;
+            candidateSelect.appendChild(option);
+          });
+        });
+
+      // Handle form submission to cast a vote
+      const voteForm = document.querySelector("form");
+      voteForm.addEventListener("submit", event => {
+        event.preventDefault();
+        const candidateIndex = candidateSelect.value;
+
+        // Send a vote to the API and update the results
+        fetch(`/vote/${candidateIndex}`, { method: "POST" })
+          .then(response => response.json())
+          .then(data => {
+            resultsList.innerHTML = ""; // Clear previous results
+            Object.entries(data).forEach(([candidate, votes]) => {
+              const li = document.createElement("li");
+              li.appendChild(document.createTextNode(`${candidate}: ${votes}`));
+              resultsList.appendChild(li);
+            });
+          });
+      });
+
+      // Fetch initial results from the API and display them
+      fetch("/results")
+        .then(response => response.json())
+        .then(data => {
+          Object.entries(data).forEach(([candidate, votes]) => {
+            const li = document.createElement("li");
+            li.appendChild(document.createTextNode(`${candidate}: ${votes}`));
+            resultsList.appendChild(li);
+          });
+        });
+    </script>
+  </body>
+</html>
